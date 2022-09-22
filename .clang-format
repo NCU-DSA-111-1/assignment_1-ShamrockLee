@@ -1,0 +1,4 @@
+---
+BasedOnStyle: Chromium
+ColumnLimit: 0
+AlignEscapedNewlines: DontAlign
