@@ -47,6 +47,8 @@
 #ifndef OPTPARSE_H
 #define OPTPARSE_H
 
+#include <stdlib.h>
+
 #ifndef OPTPARSE_API
 #define OPTPARSE_API
 #endif
@@ -57,7 +59,7 @@ struct optparse {
   int optind;
   int optopt;
   char* optarg;
-  char errmsg[64];
+  char* errmsg;
   int subopt;
 };
 
@@ -78,6 +80,12 @@ struct optparse_long {
  */
 OPTPARSE_API
 void optparse_init(struct optparse* options, char** argv);
+
+/**
+ * Finalize the parser.
+ */
+OPTPARSE_API
+void optpase_final(struct optparse* options);
 
 /**
  * Read the next option in the argv array.
@@ -143,7 +151,13 @@ void optparse_init(struct optparse* options, char** argv) {
   options->optind = argv[0] != 0;
   options->subopt = 0;
   options->optarg = 0;
+  options->errmsg = (char*)malloc(sizeof(char) * 64);
   options->errmsg[0] = '\0';
+}
+
+OPTPARSE_API
+void optparse_final(struct optparse* options) {
+  free(options->errmsg);
 }
 
 static int
@@ -214,10 +228,12 @@ int optparse(struct optparse* options, const char* optstring) {
   next = options->argv[options->optind + 1];
   switch (type) {
     case -1: {
-      char str[2] = {0, 0};
+      char* str = (char*)calloc(2, sizeof(char));
       str[0] = option[0];
       options->optind++;
-      return optparse_error(options, OPTPARSE_MSG_INVALID, str);
+      const int ret = optparse_error(options, OPTPARSE_MSG_INVALID, str);
+      free(str);
+      return ret;
     }
     case OPTPARSE_NONE:
       if (option[1]) {
@@ -236,10 +252,12 @@ int optparse(struct optparse* options, const char* optstring) {
         options->optarg = next;
         options->optind++;
       } else {
-        char str[2] = {0, 0};
+        char* str = (char*)calloc(2, sizeof(char));
         str[0] = option[0];
         options->optarg = 0;
-        return optparse_error(options, OPTPARSE_MSG_MISSING, str);
+        const int ret = optparse_error(options, OPTPARSE_MSG_MISSING, str);
+        free(str);
+        return ret;
       }
       return option[0];
     case OPTPARSE_OPTIONAL:
@@ -311,7 +329,7 @@ optparse_long_fallback(struct optparse* options,
                        const struct optparse_long* longopts,
                        int* longindex) {
   int result;
-  char optstring[96 * 3 + 1]; /* 96 ASCII printable characters */
+  char *optstring = (char *)malloc((96 * 3 + 1) * sizeof(char)); /* 96 ASCII printable characters */
   optparse_from_long(longopts, optstring);
   result = optparse(options, optstring);
   if (longindex != 0) {
@@ -323,6 +341,7 @@ optparse_long_fallback(struct optparse* options,
           *longindex = i;
     }
   }
+  free(optstring);
   return result;
 }
 
