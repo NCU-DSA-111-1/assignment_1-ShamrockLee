@@ -1,6 +1,8 @@
-/* Optparse --- portable, reentrant, embeddable, getopt-like option parser
+/**Optparse --- portable, reentrant, embeddable, getopt-like option parser
  *
- * This is free and unencumbered software released into the public domain.
+ * This is derived from skeeto's optparse header;
+ * both the original work and this derivation was free software
+ * released into the public domain.
  *
  * To get the implementation, define OPTPARSE_IMPLEMENTATION.
  * Optionally define OPTPARSE_API to control the API's visibility
