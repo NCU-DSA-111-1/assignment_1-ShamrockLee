@@ -76,15 +76,15 @@
     va_list ap; \
     va_start(ap, parr); \
     size_t dim_prev_prod = 1; \
-    T* result = parr->p_data; \
+    size_t idx_tot = 0; \
     for (size_t i = 0; i < parr->n_dim; ++i) { \
       const ptrdiff_t idx_signed = va_arg(ap, ptrdiff_t); \
       const size_t idx = (idx_signed < 0) ? IDX(parr->p_dims, i) + idx_signed : idx_signed; \
-      result += sizeof(T) * dim_prev_prod * idx; \
+      idx_tot += dim_prev_prod * idx; \
       dim_prev_prod *= IDX(parr->p_dims, i); \
     } \
     va_end(ap); \
-    return result; \
+    return PIDX(parr->p_data, idx_tot); \
   }
 
 #define NDARR_FREE(parr) \
