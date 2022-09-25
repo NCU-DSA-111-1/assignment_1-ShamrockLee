@@ -9,24 +9,15 @@
 #include <stdio.h>
 
 /**
- * This header provides helper macro implemented through a static function
+ * This header provides helper macro
+ * implemented through ##__VA_ARGS__ macro supported by gcc, clang and xlc
  * to help printing debug messages prefixed with the file path and the line
  * where it is called.
+ *
+ * See https://stackoverflow.com/questions/37206118/va-args-not-swallowing-comma-when-zero-args-under-c99
  **/
 
-static int __debug_printf(const int level, const char* fmt, ...) {
-  if (level >= DEBUG_LEVEL) {
-    va_list ap;
-    va_start(ap, fmt);
-    const int ret = vfprintf(stderr, fmt, ap);
-    va_end(ap);
-    return ret;
-  }
-  return 0;
-}
-
-#define DEBUG_PRINTF \
-  fprintf(stderr, "%s:%d: debug: ", __FILE__, __LINE__); \
-  __debug_printf
+#define DEBUG_PRINTF(LEVEL, FORMAT, ...) \
+  ((LEVEL >= DEBUG_LEVEL) ? fprintf(stderr, "%s:%d: debug: " FORMAT, __FILE__, __LINE__, ##__VA_ARGS__) : 0)
 
 #endif  // DEBUG_H
