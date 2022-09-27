@@ -2,7 +2,7 @@
 
 /**
  * This header consists of macros that
- * defines a structure representing a column-based N-dimensional array
+ * defines a structure representing a column-based 2- or N-dimensional array
  * and related utilities.
  * The structure itself is made up with
  * the number of dimensions, the pointer to the length of each dimension,
@@ -18,6 +18,29 @@
 
 #include "debug.h"
 #include "idx.h"
+
+// 2-dimensional arrays
+
+#define ARR2D_TYPE(T) struct arr2d_##T
+
+#define DEFINE_ARR2D_TYPE(T) \
+  ARR2D_TYPE(T) { \
+    size_t dim0, dim1; \
+    T* p_data; \
+  }
+#define ARR2D_ALLOC(parr) (parr->p_data = (typeof(*parr->p_data))malloc(sizeof(*parr->p_data) * (parr->dim0 * parr->dim1)));
+#define ARR2D_FREE(parr) free(parr->p_data)
+#define ARR2D_PIDX(parr, i0, i1) PIDX(parr->p_data, i0 + i1 * parr->dim0)
+
+#ifndef DEFINED_ARR2D_DOUBLE
+#define DEFINED_ARR2D_DOUBLE
+DEFINE_ARR2D_TYPE(double);
+#endif /* DEFINED_ARR2D_DOUBLE */
+
+#ifndef DEFINED_ARR2D_FLOAT
+#define DEFINED_ARR2D_FLOAT
+DEFINE_ARR2D_TYPE(float);
+#endif /* DEFINED_ARR2D_FLOAT */
 
 // N-dimensional arrays
 
