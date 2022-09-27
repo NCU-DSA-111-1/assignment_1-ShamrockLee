@@ -19,6 +19,8 @@
 #include "debug.h"
 #include "idx.h"
 
+// N-dimensional arrays
+
 #define NDARR_TYPE(T) struct ndarr_##T
 
 #define DEFINE_NDARR_TYPE(T) \
