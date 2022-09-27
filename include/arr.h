@@ -21,19 +21,19 @@
 
 // N-dimensional arrays
 
-#define NDARR_TYPE(T) struct ndarr_##T
+#define ARRND_TYPE(T) struct arrnd_##T
 
-#define DEFINE_NDARR_TYPE(T) \
-  NDARR_TYPE(T) { \
+#define DEFINE_ARRND_TYPE(T) \
+  ARRND_TYPE(T) { \
     size_t n_dim; \
     size_t* p_dims; \
     T* p_data; \
   }
 
-#define NDARR_ALLOC_FN(T) ndarr_alloc_##T
-#define DECL_NDARR_ALLOC_FN(T) void NDARR_ALLOC_FN(T)(NDARR_TYPE(T) * parr, const size_t n_dim, ...)
-#define DEFINE_NDARR_ALLOC_FN(T) \
-  DECL_NDARR_ALLOC_FN(T) { \
+#define ARRND_ALLOC_FN(T) arrnd_alloc_##T
+#define DECL_ARRND_ALLOC_FN(T) void ARRND_ALLOC_FN(T)(ARRND_TYPE(T) * parr, const size_t n_dim, ...)
+#define DEFINE_ARRND_ALLOC_FN(T) \
+  DECL_ARRND_ALLOC_FN(T) { \
     va_list ap; \
     va_start(ap, n_dim); \
     parr->n_dim = n_dim; \
@@ -51,10 +51,10 @@
     parr->p_data = (T*)malloc(sizeof(T) * n_data); \
   }
 
-#define NDARR_PIDX_FN(T) ndarr_pidx_##T
-#define DECL_NDARR_PIDX_FN(T) T* NDARR_PIDX_FN(T)(NDARR_TYPE(T) * parr, ...)
-#define DEFINE_NDARR_PIDX_FN(T) \
-  DECL_NDARR_PIDX_FN(T) { \
+#define ARRND_PIDX_FN(T) arrnd_pidx_##T
+#define DECL_ARRND_PIDX_FN(T) T* ARRND_PIDX_FN(T)(ARRND_TYPE(T) * parr, ...)
+#define DEFINE_ARRND_PIDX_FN(T) \
+  DECL_ARRND_PIDX_FN(T) { \
     va_list ap; \
     va_start(ap, parr); \
     size_t dim_prev_prod = 1; \
@@ -71,10 +71,10 @@
     return result; \
   }
 
-#define NDARR_PSIDX_FN(T) ndarr_psidva_endx_##T
-#define DECL_NDARR_PSIDX_FN(T) T* NDARR_PSIDX_FN(T)(NDARR_TYPE(T) * parr, ...)
-#define DEFINE_NDARR_PSIDX_FN(T) \
-  DECL_NDARR_PSIDX_FN(T) { \
+#define ARRND_PSIDX_FN(T) arrnd_psidva_endx_##T
+#define DECL_ARRND_PSIDX_FN(T) T* ARRND_PSIDX_FN(T)(ARRND_TYPE(T) * parr, ...)
+#define DEFINE_ARRND_PSIDX_FN(T) \
+  DECL_ARRND_PSIDX_FN(T) { \
     va_list ap; \
     va_start(ap, parr); \
     size_t dim_prev_prod = 1; \
@@ -89,24 +89,24 @@
     return PIDX(parr->p_data, idx_tot); \
   }
 
-#define NDARR_FREE(parr) \
+#define ARRND_FREE(parr) \
   free((parr)->p_data); \
   free((parr)->p_dims)
 
-#define ACQUIRE_NDARR_UTILS(T) \
-  DEFINE_NDARR_TYPE(T); \
-  DEFINE_NDARR_ALLOC_FN(T); \
-  DEFINE_NDARR_PIDX_FN(T); \
-  DEFINE_NDARR_PSIDX_FN(T)
+#define ACQUIRE_ARRND_UTILS(T) \
+  DEFINE_ARRND_TYPE(T); \
+  DEFINE_ARRND_ALLOC_FN(T); \
+  DEFINE_ARRND_PIDX_FN(T); \
+  DEFINE_ARRND_PSIDX_FN(T)
 
-#ifndef ACQUIRED_NDARRAY_UTILS_DOUBLE
-#define ACQUIRED_NDARRAY_UTILS_DOUBLE
-ACQUIRE_NDARR_UTILS(double);
+#ifndef ACQUIRED_ARRND_UTILS_DOUBLE
+#define ACQUIRED_ARRND_UTILS_DOUBLE
+ACQUIRE_ARRND_UTILS(double);
 #endif
 
-#ifndef ACQUIRED_NDARRAY_UTILS_FLOAT
-#define ACQUIRED_NDARRAY_UTILS_FLOAT
-ACQUIRE_NDARR_UTILS(float);
+#ifndef ACQUIRED_ARRND_UTILS_FLOAT
+#define ACQUIRED_ARRND_UTILS_FLOAT
+ACQUIRE_ARRND_UTILS(float);
 #endif
 
 #endif  // NN_UTILS_H
