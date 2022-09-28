@@ -2,7 +2,7 @@
 
 /**
  * This header consists of macros that
- * defines a structure representing a column-based 2- or N-dimensional array
+ * defines a structure representing a column-major, 2- or N-dimensional array
  * and related utilities.
  * The structure itself is made up with
  * the number of dimensions, the pointer to the length of each dimension,
@@ -15,22 +15,56 @@
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "debug.h"
 #include "idx.h"
 
 // 2-dimensional arrays
 
-#define ARR2D_TYPE(T) struct arr2d_##T
+#define ARR2D_TYPE(T) arr2d_##T
 
 #define DEFINE_ARR2D_TYPE(T) \
-  ARR2D_TYPE(T) { \
+  typedef struct ARR2D_TYPE(T) { \
     size_t dim0, dim1; \
     T* p_data; \
-  }
-#define ARR2D_ALLOC(parr) (parr->p_data = (typeof(*parr->p_data))malloc(sizeof(*parr->p_data) * (parr->dim0 * parr->dim1)));
-#define ARR2D_FREE(parr) free(parr->p_data)
-#define ARR2D_PIDX(parr, i0, i1) PIDX(parr->p_data, i0 + i1 * parr->dim0)
+  } ARR2D_TYPE(T)
+#define ARR2D_ALLOC(p_arr) ( \
+    (p_arr)->p_data = \
+        (typeof((p_arr)->p_data)) \
+            malloc(sizeof(*(p_arr)->p_data) * ((p_arr)->dim0 * (p_arr)->dim1)))
+#define ARR2D_FREE(p_arr) free((p_arr)->p_data)
+#define ARR2D_PIDX(p_arr, i0, i1) PIDX((p_arr)->p_data, i0 + i1 * (p_arr)->dim0)
+
+/// Left product onto a column vector: Av
+///
+/// The shape of A is m * n, v n * 1, and Av 1 * m
+/// p_out should be allocated to fill in p_arr->dim0 elements
+/// prior to calling
+#define ARR2D_LPROD(p_arr, p_out, p_in) \
+  do { \
+    MEMSETN(p_out, 0, (p_arr)->dim0); \
+    for (size_t i = 0; i < (p_arr)->dim1; ++i) { \
+      for (size_t j = 0; j < (p_arr)->dim0; ++j) { \
+        IDX(p_out, j) += *ARR2D_PIDX(p_arr, j, i) * IDX(p_in, i); \
+      } \
+    } \
+  } while (0)
+
+/// Right product onto a row vector: vA
+///
+/// The shape of A is m * n, v 1 * m, and vA n * 1
+/// p_out should be allocated to fill in p_arr->dim1 elements
+/// prior to calling
+#define ARR2D_RPROD(p_arr, p_out, p_in) \
+  do { \
+    MEMSETN(p_out, 0, (p_arr)->dim1); \
+    for (size_t j = 0; j < (p_arr)->dim1; ++j) { \
+      for (size_t i = 0; i < (p_arr)->dim0; ++i) { \
+        IDX(p_out, j) += IDX(p_in, i) * *ARR2D_PIDX(p_arr, i, j); \
+      } \
+    } \
+  } while (0)
 
 #ifndef DEFINED_ARR2D_DOUBLE
 #define DEFINED_ARR2D_DOUBLE
@@ -44,83 +78,83 @@ DEFINE_ARR2D_TYPE(float);
 
 // N-dimensional arrays
 
-#define ARRND_TYPE(T) struct arrnd_##T
+#define ARRND_TYPE(T) arrnd_##T
 
 #define DEFINE_ARRND_TYPE(T) \
-  ARRND_TYPE(T) { \
+  typedef struct ARRND_TYPE(T) { \
     size_t n_dim; \
     size_t* p_dims; \
     T* p_data; \
-  }
+  } ARRND_TYPE(T)
 
 #define ARRND_ALLOC_FN(T) arrnd_alloc_##T
-#define DECL_ARRND_ALLOC_FN(T) void ARRND_ALLOC_FN(T)(ARRND_TYPE(T) * parr, const size_t n_dim, ...)
+#define DECL_ARRND_ALLOC_FN(T) void ARRND_ALLOC_FN(T)(ARRND_TYPE(T) * p_arr, const size_t n_dim, ...)
 #define DEFINE_ARRND_ALLOC_FN(T) \
   DECL_ARRND_ALLOC_FN(T) { \
     va_list ap; \
     va_start(ap, n_dim); \
-    parr->n_dim = n_dim; \
-    parr->p_dims = (size_t*)malloc(sizeof(size_t) * n_dim); \
+    p_arr->n_dim = n_dim; \
+    p_arr->p_dims = (size_t*)malloc(sizeof(size_t) * n_dim); \
     if (!n_dim) { \
-      parr->p_data = (T*)malloc(0); \
+      p_arr->p_data = (T*)malloc(0); \
     } \
     size_t n_data = 1; \
     for (size_t i = 0; i < n_dim; ++i) { \
-      *(parr->p_dims + sizeof(size_t) * i) = va_arg(ap, size_t); \
-      n_data *= IDX(parr->p_dims, i); \
+      *(p_arr->p_dims + sizeof(size_t) * i) = va_arg(ap, size_t); \
+      n_data *= IDX(p_arr->p_dims, i); \
     } \
     DEBUG_PRINTF(1, "n_data: %zu\n", n_data); \
     va_end(ap); \
-    parr->p_data = (T*)malloc(sizeof(T) * n_data); \
+    p_arr->p_data = (T*)malloc(sizeof(T) * n_data); \
   }
 
 #define ARRND_PIDX_FN(T) arrnd_pidx_##T
-#define DECL_ARRND_PIDX_FN(T) T* ARRND_PIDX_FN(T)(ARRND_TYPE(T) * parr, ...)
+#define DECL_ARRND_PIDX_FN(T) T* ARRND_PIDX_FN(T)(ARRND_TYPE(T) * p_arr, ...)
 #define DEFINE_ARRND_PIDX_FN(T) \
   DECL_ARRND_PIDX_FN(T) { \
     va_list ap; \
-    va_start(ap, parr); \
+    va_start(ap, p_arr); \
     size_t dim_prev_prod = 1; \
-    T* result = parr->p_data; \
-    DEBUG_PRINTF(1, "parr->p_data: %p\n", parr->p_data); \
-    for (size_t i = 0; i < parr->n_dim; ++i) { \
+    T* result = p_arr->p_data; \
+    DEBUG_PRINTF(1, "p_arr->p_data: %p\n", p_arr->p_data); \
+    for (size_t i = 0; i < p_arr->n_dim; ++i) { \
       const size_t idx = va_arg(ap, size_t); \
-      DEBUG_PRINTF(1, "i: %zu, dim_len: %zu, idx: %zu, dim_prev_prod: %zu\n", i, parr->p_dims + sizeof(size_t) * i, idx, dim_prev_prod); \
+      DEBUG_PRINTF(1, "i: %zu, dim_len: %zu, idx: %zu, dim_prev_prod: %zu\n", i, p_arr->p_dims + sizeof(size_t) * i, idx, dim_prev_prod); \
       result += sizeof(T) * dim_prev_prod * idx; \
       DEBUG_PRINTF(1, "result: %p\n", result); \
-      dim_prev_prod *= IDX(parr->p_dims, i); \
+      dim_prev_prod *= IDX(p_arr->p_dims, i); \
     } \
     va_end(ap); \
     return result; \
   }
 
-#define ARRND_PSIDX_FN(T) arrnd_psidva_endx_##T
-#define DECL_ARRND_PSIDX_FN(T) T* ARRND_PSIDX_FN(T)(ARRND_TYPE(T) * parr, ...)
-#define DEFINE_ARRND_PSIDX_FN(T) \
-  DECL_ARRND_PSIDX_FN(T) { \
+#define ARRND_PWIDX_FN(T) arrnd_pwidx_##T
+#define DECL_ARRND_PWIDX_FN(T) T* ARRND_PWIDX_FN(T)(ARRND_TYPE(T) * p_arr, ...)
+#define DEFINE_ARRND_PWIDX_FN(T) \
+  DECL_ARRND_PWIDX_FN(T) { \
     va_list ap; \
-    va_start(ap, parr); \
+    va_start(ap, p_arr); \
     size_t dim_prev_prod = 1; \
     size_t idx_tot = 0; \
-    for (size_t i = 0; i < parr->n_dim; ++i) { \
+    for (size_t i = 0; i < p_arr->n_dim; ++i) { \
       const ptrdiff_t idx_signed = va_arg(ap, ptrdiff_t); \
-      const size_t idx = (idx_signed < 0) ? IDX(parr->p_dims, i) + idx_signed : idx_signed; \
+      const size_t idx = (idx_signed < 0) ? IDX(p_arr->p_dims, i) + idx_signed : idx_signed; \
       idx_tot += dim_prev_prod * idx; \
-      dim_prev_prod *= IDX(parr->p_dims, i); \
+      dim_prev_prod *= IDX(p_arr->p_dims, i); \
     } \
     va_end(ap); \
-    return PIDX(parr->p_data, idx_tot); \
+    return PIDX(p_arr->p_data, idx_tot); \
   }
 
-#define ARRND_FREE(parr) \
-  free((parr)->p_data); \
-  free((parr)->p_dims)
+#define ARRND_FREE(p_arr) \
+  free((p_arr)->p_data); \
+  free((p_arr)->p_dims)
 
 #define ACQUIRE_ARRND_UTILS(T) \
   DEFINE_ARRND_TYPE(T); \
   DEFINE_ARRND_ALLOC_FN(T); \
   DEFINE_ARRND_PIDX_FN(T); \
-  DEFINE_ARRND_PSIDX_FN(T)
+  DEFINE_ARRND_PWIDX_FN(T)
 
 #ifndef ACQUIRED_ARRND_UTILS_DOUBLE
 #define ACQUIRED_ARRND_UTILS_DOUBLE
