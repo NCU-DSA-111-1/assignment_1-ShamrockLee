@@ -20,11 +20,11 @@ int test_arr2d() {
   *ARR2D_PIDX(&a_foo, 1, 1) = 4.;
   *ARR2D_PIDX(&a_foo, 2, 1) = 5.;
   double* p_bar;
-  ALLOC_TO(p_bar, 2);
+  ALLOC_TO(&p_bar, 2);
   IDX(p_bar, 0) = 6.;
   IDX(p_bar, 1) = 7.;
   double* p_foo_bar;
-  ALLOC_TO(p_foo_bar, 3);
+  ALLOC_TO(&p_foo_bar, 3);
   ARR2D_LPROD(&a_foo, p_foo_bar, p_bar);
   // integer products don't have round-off error
   assert(IDX(p_foo_bar, 0) == 0. * 6. + 3. * 7.);
@@ -32,12 +32,12 @@ int test_arr2d() {
   assert(IDX(p_foo_bar, 2) == 2. * 6. + 5. * 7.);
   free(p_foo_bar);
   free(p_bar);
-  ALLOC_TO(p_bar, 3);
+  ALLOC_TO(&p_bar, 3);
   IDX(p_bar, 0) = 6.;
   IDX(p_bar, 1) = 7.;
   IDX(p_bar, 2) = 8.;
   double* p_bar_foo;
-  ALLOC_TO(p_bar_foo, 2);
+  ALLOC_TO(&p_bar_foo, 2);
   ARR2D_RPROD(&a_foo, p_bar_foo, p_bar);
   assert(IDX(p_bar_foo, 0) == 0. * 6. + 1. * 7. + 2. * 8.);
   assert(IDX(p_bar_foo, 1) == 3. * 6. + 4. * 7. + 5. * 8.);

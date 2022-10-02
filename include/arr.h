@@ -29,10 +29,7 @@
     size_t dim0, dim1; \
     T* p_data; \
   } ARR2D_TYPE(T)
-#define ARR2D_ALLOC(p_arr) ( \
-    (p_arr)->p_data = \
-        (typeof((p_arr)->p_data)) \
-            malloc(sizeof(*(p_arr)->p_data) * ((p_arr)->dim0 * (p_arr)->dim1)))
+#define ARR2D_ALLOC(p_arr) ALLOC_TO(&(p_arr)->p_data, (p_arr)->dim0*(p_arr)->dim1)
 #define ARR2D_FREE(p_arr) free((p_arr)->p_data)
 #define ARR2D_PIDX(p_arr, i0, i1) PIDX((p_arr)->p_data, i0 + i1 * (p_arr)->dim0)
 
