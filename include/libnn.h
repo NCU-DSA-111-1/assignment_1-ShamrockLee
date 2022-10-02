@@ -73,4 +73,12 @@ int train(
     ARR2D_TYPE(double) * const pa_weights,
     double* const* const pp_biases);
 
+void predict_raw(
+    double (*const fn_activation)(const double),
+    const size_t n_layer,
+    const ARR2D_TYPE(double) * const pa_weights,
+    const double* const* const pp_biases,
+    const double* const p_inputs,
+    double* const p_output);
+
 #endif /* LIBNN_H */

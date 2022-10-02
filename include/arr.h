@@ -33,20 +33,33 @@
 #define ARR2D_FREE(p_arr) free((p_arr)->p_data)
 #define ARR2D_PIDX(p_arr, i0, i1) PIDX((p_arr)->p_data, i0 + i1 * (p_arr)->dim0)
 
-/// Left product onto a column vector: Av
+/// Left product onto a column vector plus a bias: Av + b
 ///
-/// The shape of A is m * n, v n * 1, and Av 1 * m
+/// The shape of A is m * n, v n * 1, b n * 1, and Av 1 * m
+///
+/// If the bias pointer is NULL, b = 0 is assumed
 /// p_out should be allocated to fill in p_arr->dim0 elements
 /// prior to calling
-#define ARR2D_LPROD(p_arr, p_out, p_in) \
+#define ARR2D_LPROD_BIASED(p_arr, p_out, p_in, b_in) \
   do { \
-    MEMSETN(p_out, 0, (p_arr)->dim0); \
+    if (b_in) { \
+      MEMSETN(p_out, 0, (p_arr)->dim0); \
+    } else { \
+      MEMCPYN(p_out, b_in, (p_arr)->dim0); \
+    } \
     for (size_t i = 0; i < (p_arr)->dim1; ++i) { \
       for (size_t j = 0; j < (p_arr)->dim0; ++j) { \
         IDX(p_out, j) += *ARR2D_PIDX(p_arr, j, i) * IDX(p_in, i); \
       } \
     } \
   } while (0)
+
+/// Left product onto a column vector: Av
+///
+/// The shape of A is m * n, v n * 1, and Av 1 * m
+/// p_out should be allocated to fill in p_arr->dim0 elements
+/// prior to calling
+#define ARR2D_LPROD(p_arr, p_out, p_in) ARR2D_LPROD_BIASED(p_arr, p_out, p_in, NULL)
 
 /// Right product onto a row vector: vA
 ///

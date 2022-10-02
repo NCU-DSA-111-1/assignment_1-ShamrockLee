@@ -108,12 +108,8 @@ void forward(
   double* p_layer_activated_prev = *pp_layers_activated;
   for (size_t i_layer = 0; i_layer < n_layer; ++i_layer) {
     // Filling IDX(pp_layers, i_layer)
-    // Multiply the weight
-    ARR2D_LPROD(PIDX(pa_weights, i_layer), IDX(pp_layers, i_layer), p_layer_activated_prev);
-    // Plus the bias
-    for (size_t i_elem = 0; i_elem < PIDX(pa_weights, i_layer)->dim0; ++i_elem) {
-      IDX(IDX(pp_layers, i_layer), i_elem) += IDX(IDX(pp_biases, i_layer), i_elem);
-    }
+    // Multiply the weight and plus the bias
+    ARR2D_LPROD_BIASED(PIDX(pa_weights, i_layer), IDX(pp_layers, i_layer), p_layer_activated_prev, IDX(pp_biases, i_layer));
     // IDX(pp_layers, i_layer) filled
     // Filling IDX(pp_layers_activated, i_layer)
     // Apply the activation function
