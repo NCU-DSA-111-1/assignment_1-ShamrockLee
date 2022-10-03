@@ -4,7 +4,6 @@
  * both the original work and this derivation was free software
  * released into the public domain.
  *
- * To get the implementation, define OPTPARSE_IMPLEMENTATION.
  * Optionally define OPTPARSE_API to control the API's visibility
  * and/or linkage (static, __attribute__, __declspec).
  *
