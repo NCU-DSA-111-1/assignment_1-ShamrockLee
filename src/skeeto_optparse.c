@@ -1,7 +1,5 @@
 #include "skeeto_optparse.h"
 
-#include "idx.h"
-
 #define OPTPARSE_MSG_INVALID "invalid option"
 #define OPTPARSE_MSG_MISSING "option requires an argument"
 #define OPTPARSE_MSG_TOOMANY "option takes no arguments"
@@ -25,10 +23,9 @@ OPTPARSE_API
 void optparse_init(struct optparse* options, char** argv) {
   options->argv = argv;
   options->permute = 1;
-  options->optind = IDX(argv, 0) != 0;
+  options->optind = argv[0] != 0;
   options->subopt = 0;
   options->optarg = 0;
-  free(options->errmsg);
   options->errmsg = (char*)malloc(sizeof(char) * 64);
   options->errmsg[0] = '\0';
 }
@@ -55,11 +52,11 @@ optparse_is_longopt(const char* arg) {
 
 static void
 optparse_permute(struct optparse* options, int index) {
-  char* nonoption = IDX(options->argv, index);
+  char* nonoption = options->argv[index];
   int i;
   for (i = index; i < options->optind - 1; i++)
-    IDX(options->argv, i) = IDX(options->argv, i + 1);
-  IDX(options->argv, options->optind - 1) = nonoption;
+    options->argv[i] = options->argv[i + 1];
+  options->argv[options->optind - 1] = nonoption;
 }
 
 static int
@@ -80,7 +77,7 @@ OPTPARSE_API
 int optparse(struct optparse* options, const char* optstring) {
   int type;
   char* next;
-  char* option = IDX(options->argv, options->optind);
+  char* option = options->argv[options->optind];
   options->errmsg[0] = '\0';
   options->optopt = 0;
   options->optarg = 0;
@@ -103,7 +100,7 @@ int optparse(struct optparse* options, const char* optstring) {
   option += options->subopt + 1;
   options->optopt = option[0];
   type = optparse_argtype(optstring, option[0]);
-  next = IDX(options->argv, options->optind + 1);
+  next = options->argv[options->optind + 1];
   switch (type) {
     case -1: {
       char* str = (char*)calloc(2, sizeof(char));
@@ -152,7 +149,7 @@ int optparse(struct optparse* options, const char* optstring) {
 
 OPTPARSE_API
 char* optparse_arg(struct optparse* options) {
-  char* option = IDX(options->argv, options->optind);
+  char* option = options->argv[options->optind];
   options->subopt = 0;
   if (option != 0)
     options->optind++;
@@ -228,7 +225,7 @@ int optparse_long(struct optparse* options,
                   const struct optparse_long* longopts,
                   int* longindex) {
   int i;
-  char* option = IDX(options->argv, options->optind);
+  char* option = options->argv[options->optind];
   if (option == 0) {
     return -1;
   } else if (optparse_is_dashdash(option)) {
@@ -268,7 +265,7 @@ int optparse_long(struct optparse* options,
       if (arg != 0) {
         options->optarg = arg;
       } else if (longopts[i].argtype == OPTPARSE_REQUIRED) {
-        options->optarg = IDX(options->argv, options->optind);
+        options->optarg = options->argv[options->optind];
         if (options->optarg == 0)
           return optparse_error(options, OPTPARSE_MSG_MISSING, name);
         else
