@@ -13,7 +13,9 @@ LIBDIR := $(INSTALL_PREFIX)/lib
 
 SRCEXT := c
 
-SOURCES_SHARED := $(shell find $(SRCDIR) -type f,l -name *.$(SRCEXT) -not -path $(SRCDIR)/main)
+# Reference to the find command sub-directory exclusion:
+# https://stackoverflow.com/questions/4210042/how-do-i-exclude-a-directory-when-using-find
+SOURCES_SHARED := $(shell find $(SRCDIR) -path $(SRCDIR)/main -prune -false -o -type f,l -name "*.$(SRCEXT)" -print )
 SOURCES_MAIN := $(shell find $(SRCDIR)/main -type f,l -name *.$(SRCEXT))
 TESTS := $(shell find $(TESTDIR) -type f,l -name "test_*.$(SRCEXT)")
 TESTNAMES := $(patsubst $(TESTDIR)/test_%,%,$(TESTS:.$(SRCEXT)=))
