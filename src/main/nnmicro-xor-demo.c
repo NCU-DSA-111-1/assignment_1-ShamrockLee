@@ -68,7 +68,10 @@ int main(int argc, char** argv) {
     ARR2D_ALLOC(pa_weights + i_layer);
     ARR2D_ALLOC(pa_grad_weights + i_layer);
     ARR2D_ALLOC(pa_grad_weights_avg + i_layer);
+    // Initial weight
+    // -1. (a rather extreme initial to show the changing tendency)
     FILLN((pa_weights + i_layer)->p_data, -1., ARR2D_NELEM(pa_weights + i_layer));
+    // 0.5 (in the hope that it normalize the values)
     // FILLN((pa_weights + i_layer)->p_data, 1. / p_dims[i_layer], ARR2D_NELEM(pa_weights + i_layer));
     FILLN((pa_grad_weights + i_layer)->p_data, 0., ARR2D_NELEM(pa_weights + i_layer));
     FILLN((pa_grad_weights_avg + i_layer)->p_data, 0., ARR2D_NELEM(pa_weights + i_layer));
@@ -81,6 +84,7 @@ int main(int argc, char** argv) {
   ALLOC_TO(pp_grad_biases, n_layer);
   ALLOC_TO(pp_grad_biases_avg, n_layer);
   for (size_t i_layer = 0; i_layer < n_layer; ++i_layer) {
+    // Initial bias: 0.
     CALLOC_TO(pp_biases[i_layer], p_dims[i_layer + 1]);
     CALLOC_TO(pp_layers[i_layer], p_dims[i_layer + 1]);
     CALLOC_TO(pp_layers_activated[i_layer], p_dims[i_layer + 1]);
@@ -117,6 +121,7 @@ int main(int argc, char** argv) {
   FILLN(a_inputs.p_data, 0., ARR2D_NELEM(&a_inputs));
   ARR2D_ALLOC(&a_answers);
   MEMSETN(a_answers.p_data, 0, a_answers.dim0 * a_answers.dim1);
+  printf("Input\t\tAnswer\n");
   for (uint_fast64_t i_sample = 0; i_sample < n_data_train; ++i_sample) {
     bool bit_all = 0;
     for (size_t i_elem = 0; i_elem < n_input; ++i_elem) {
@@ -125,7 +130,9 @@ int main(int argc, char** argv) {
       bit_all ^= bit_now;
     };
     *ARR2D_PIDX(&a_answers, 0, (size_t)i_sample) = (double)(bit_all);
+    printf("(%f, %f)\t%f\n", *ARR2D_PIDX(&a_inputs, 0, (size_t)i_sample), *ARR2D_PIDX(&a_inputs, 1, (size_t)i_sample), *ARR2D_PIDX(&a_answers, 0, (size_t)i_sample));
   }
+  fflush(stdout);
 
   // Train
   // Simplify from the batch_train definition from libnn.c
@@ -180,6 +187,7 @@ int main(int argc, char** argv) {
       }
     } while (loss_now > max_loss || loss_delta_neg > max_delta_loss);
   }
+  fflush(stderr);
 
   // Predict
   // There's only two outputs, so just show the prediction.
@@ -187,7 +195,7 @@ int main(int argc, char** argv) {
   printf("Input\tRaw output\tOutput\tAnswer\n");
   for (size_t i_sample = 0; i_sample < n_data_train; ++i_sample) {
     const double* const p_inputs = ARR2D_PIDX(&a_inputs, 0, i_sample);
-    const double const answer = *ARR2D_PIDX(&a_inputs, 0, i_sample);
+    const double const answer = *ARR2D_PIDX(&a_answers, 0, i_sample);
     // Simplify from the predict_raw definition from libnn.c
     // but avoid calling init_param_*.
     forward(fn_activation, n_layer, pa_weights, pp_biases, p_inputs, pp_layers, pp_layers_activated);
