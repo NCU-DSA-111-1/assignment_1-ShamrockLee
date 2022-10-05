@@ -17,6 +17,20 @@
  **/
 
 #define DEBUG_PRINTF(LEVEL, FORMAT, ...) \
-  ((LEVEL >= DEBUG_LEVEL) ? fprintf(stderr, "%s:%d: debug: " FORMAT, __FILE__, __LINE__, ##__VA_ARGS__) : 0)
+  ((LEVEL <= DEBUG_LEVEL) ? fprintf(stderr, "%s:%d: debug: " FORMAT, __FILE__, __LINE__, ##__VA_ARGS__) : 0)
+
+#define RETURN_WHEN_FALSE(_COMMAND_TRY, _COMMAND_FINAL, ...) \
+  if (!(_COMMAND_TRY)) { \
+    DEBUG_PRINTF(0, __VA_ARGS__); \
+    _COMMAND_FINAL; \
+    return 0; \
+  }
+
+#define RETURN_WHEN_TRUE(_COMMAND_TRY, _COMMAND_FINAL, ...) \
+  if (_COMMAND_TRY) { \
+    DEBUG_PRINTF(0, __VA_ARGS__); \
+    _COMMAND_FINAL; \
+    return 1; \
+  }
 
 #endif  // DEBUG_H

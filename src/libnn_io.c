@@ -26,20 +26,13 @@ static inline uint32_t decode_uint32_be(const char* const pbegin) {
   // clang-format off
 }
 
-#define __RETURN_WHEN_FALSE(_COMMAND_TRY, _COMMAND_FINAL, ...) \
-  if (!(_COMMAND_TRY)) { \
-    DEBUG_PRINTF(0, __VA_ARGS__); \
-    _COMMAND_FINAL; \
-    return 0; \
-  }
-
 int write_model_data(
     FILE* pf_out,
     const size_t n_layer,
     const size_t* const p_dims,
     const ARR2D_TYPE(double) * const pa_weights,
     const double* const* const pp_biases) {
-  __RETURN_WHEN_FALSE(fputs(NN_FILE_MAGIC, pf_out), , "Failed to write magic.\n");
+  RETURN_WHEN_FALSE(fputs(NN_FILE_MAGIC, pf_out), , "Failed to write magic.\n");
   char* buf = NULL;
   {
     // buf should be n_dim p_dims,
@@ -51,7 +44,7 @@ int write_model_data(
     for (size_t i_dim = 0; i_dim < n_layer + 1; ++i_dim) {
       encode_uint32_be(buf + sizeof(uint32_t) * (1 + i_dim), IDX(p_dims, i_dim));
     }
-    __RETURN_WHEN_FALSE(fwrite(buf, len_buf, 1, pf_out), free(buf), "Failed to write dims.\n");
+    RETURN_WHEN_FALSE(fwrite(buf, len_buf, 1, pf_out), free(buf), "Failed to write dims.\n");
   }
   size_t n_elem_bias_all_tot = 0;
   size_t n_elem_weight_all_tot = 0;
@@ -71,7 +64,7 @@ int write_model_data(
       }
       n_elem_weight_prevall_tot += n_elem_weight_now_tot;
     }
-    __RETURN_WHEN_FALSE(fwrite(buf, len_buf, 1, pf_out), free(buf), "Failed to write weights.\n");
+    RETURN_WHEN_FALSE(fwrite(buf, len_buf, 1, pf_out), free(buf), "Failed to write weights.\n");
   }
   {
     const size_t len_buf = sizeof(double) * n_elem_bias_all_tot;
@@ -85,7 +78,7 @@ int write_model_data(
       }
       n_elem_bias_prevall_tot += n_elem_bias_now;
     }
-    __RETURN_WHEN_FALSE(fwrite(buf, len_buf, 1, pf_out), free(buf), "Failed to write biases.\n");
+    RETURN_WHEN_FALSE(fwrite(buf, len_buf, 1, pf_out), free(buf), "Failed to write biases.\n");
   }
   free(buf);
   return 1;
@@ -101,23 +94,23 @@ int read_model_data(
     char* magic_read;
     // magic_read should be magic '\0', so LEN_NN_FILE_MAGIC + 1
     magic_read = calloc(LEN_NN_FILE_MAGIC + 1, sizeof(char));
-    __RETURN_WHEN_FALSE(fread(magic_read, LEN_NN_FILE_MAGIC, 1, pf_in), free(magic_read), "Failed to read magic.\n");
-    __RETURN_WHEN_FALSE(strcmp(magic_read, NN_FILE_MAGIC) != 0, free(magic_read), "Model data file magic mismatched. Expect %s; got %s.\n", NN_FILE_MAGIC, magic_read);
+    RETURN_WHEN_FALSE(fread(magic_read, LEN_NN_FILE_MAGIC, 1, pf_in), free(magic_read), "Failed to read magic.\n");
+    RETURN_WHEN_FALSE(strcmp(magic_read, NN_FILE_MAGIC) != 0, free(magic_read), "Model data file magic mismatched. Expect %s; got %s.\n", NN_FILE_MAGIC, magic_read);
     free(magic_read);
   }
   char* buf = NULL;
   {
     // buf should be *pn_layer, so 1.
     buf = realloc(buf, sizeof(uint32_t));
-    __RETURN_WHEN_FALSE(fread(buf, 1, 1, pf_in) == 1, free(buf), "Failed to read n_layer.\n");
+    RETURN_WHEN_FALSE(fread(buf, 1, 1, pf_in) == 1, free(buf), "Failed to read n_layer.\n");
     *pn_layer = decode_uint32_be(buf);
   }
-  ALLOC_TO(&p_dims, *pn_layer + 1);
+  ALLOC_TO(p_dims, *pn_layer + 1);
   {
     // buf should be p_dims, and the length of p_dims is *pn_layer + 1, so *pn_layer + 1
     const size_t len_buf = *pn_layer + 1;
     buf = realloc(buf, len_buf);
-    __RETURN_WHEN_FALSE(fread(buf, len_buf, 1, pf_in), free(buf), "Failed to read dims.\n");
+    RETURN_WHEN_FALSE(fread(buf, len_buf, 1, pf_in), free(buf), "Failed to read dims.\n");
     for (size_t i_dim = 0; i_dim < *pn_layer + 1; ++i_dim) {
       IDX(p_dims, i_dim) = decode_uint32_be(buf + sizeof(u_int32_t) * i_dim);
     }
@@ -133,7 +126,7 @@ int read_model_data(
   {
     const size_t len_buf = sizeof(double) * n_elem_weight_all_tot;
     buf = realloc(buf, len_buf);
-    __RETURN_WHEN_FALSE(fread(buf, len_buf, 1, pf_in), free(buf), "Failed to read weights.\n");
+    RETURN_WHEN_FALSE(fread(buf, len_buf, 1, pf_in), free(buf), "Failed to read weights.\n");
     size_t n_elem_weight_prevall_tot = 0;
     for (size_t i_layer = 0; i_layer < *pn_layer; ++i_layer) {
       ARR2D_TYPE(double) * const p_weight_now= PIDX(pa_weights, i_layer);
@@ -147,7 +140,7 @@ int read_model_data(
   {
     const size_t len_buf = sizeof(double) * n_elem_bias_all_tot;
     buf = realloc(buf, len_buf);
-    __RETURN_WHEN_FALSE(fread(buf, len_buf, 1, pf_in), free(buf), "Failed to read biases.\n");
+    RETURN_WHEN_FALSE(fread(buf, len_buf, 1, pf_in), free(buf), "Failed to read biases.\n");
     size_t n_elem_bias_prevall_tot = 0;
     for (size_t i_layer = 0; i_layer < *pn_layer; ++i_layer) {
       double* const p_bias_now = IDX(pp_biases, i_layer);

@@ -1,4 +1,5 @@
-#ifndef NN_UTILS_H
+#ifndef ARR_H
+#define ARR_H
 
 /**
  * This header consists of macros that
@@ -26,14 +27,16 @@
 
 #define DEFINE_ARR2D_TYPE(T) \
   typedef struct ARR2D_TYPE(T) { \
-    size_t dim0, dim1; \
+    size_t dim0; \
+    size_t dim1; \
     T* p_data; \
   } ARR2D_TYPE(T)
-#define ARR2D_ALLOC(p_arr) ALLOC_TO(&(p_arr)->p_data, (p_arr)->dim0*(p_arr)->dim1)
+
+#define ARR2D_NELEM(p_arr) (DEBUG_PRINTF(2, "p_arr is %s, p_arr->dim0: %zu, p_arr->dim1: %zu, their product: %zu\n", #p_arr, (p_arr)->dim0, (p_arr)->dim1, (p_arr)->dim0 * (p_arr)->dim1), ((p_arr)->dim0) * ((p_arr)->dim1))
+
+#define ARR2D_ALLOC(p_arr) ALLOC_TO((p_arr)->p_data, ARR2D_NELEM(p_arr))
 #define ARR2D_FREE(p_arr) free((p_arr)->p_data)
 #define ARR2D_PIDX(p_arr, i0, i1) PIDX((p_arr)->p_data, i0 + i1 * (p_arr)->dim0)
-
-#define ARR2D_NELEM(p_arr) ((p_arr)->dim0 * (p_arr)->dim1)
 
 #define ARR2D_REPEAT(p_arr, X) \
   for (size_t i_elem = 0; i_elem < ARR2D_NELEM(p_arr); ++i_elem) { \
@@ -50,12 +53,13 @@
 #define ARR2D_LPROD_BIASED(p_arr, p_out, p_in, b_in) \
   do { \
     if (b_in) { \
-      MEMSETN(p_out, 0, (p_arr)->dim0); \
-    } else { \
       MEMCPYN(p_out, b_in, (p_arr)->dim0); \
+    } else { \
+      MEMSETN(p_out, 0, (p_arr)->dim0); \
     } \
     for (size_t i = 0; i < (p_arr)->dim1; ++i) { \
       for (size_t j = 0; j < (p_arr)->dim0; ++j) { \
+        DEBUG_PRINTF(2, "i: %zu, j: %zu, *ARR2D_PIDX(p_arr, j, i): %F, IDX(p_in, i): %F\n", i, j, *ARR2D_PIDX(p_arr, j, i), IDX(p_in, i)); \
         IDX(p_out, j) += *ARR2D_PIDX(p_arr, j, i) * IDX(p_in, i); \
       } \
     } \
@@ -136,7 +140,7 @@ DEFINE_ARR2D_TYPE(float);
     DEBUG_PRINTF(1, "p_arr->p_data: %p\n", p_arr->p_data); \
     for (size_t i = 0; i < p_arr->n_dim; ++i) { \
       const size_t idx = va_arg(ap, size_t); \
-      DEBUG_PRINTF(1, "i: %zu, dim_len: %zu, idx: %zu, dim_prev_prod: %zu\n", i, p_arr->p_dims + sizeof(size_t) * i, idx, dim_prev_prod); \
+      DEBUG_PRINTF(1, "i: %zu, dim_len: %zu, idx: %zu, dim_prev_prod: %zu\n", i, IDX(p_arr->p_dims, i), idx, dim_prev_prod); \
       result += sizeof(T) * dim_prev_prod * idx; \
       DEBUG_PRINTF(1, "result: %p\n", result); \
       dim_prev_prod *= IDX(p_arr->p_dims, i); \
@@ -183,4 +187,4 @@ ACQUIRE_ARRND_UTILS(double);
 ACQUIRE_ARRND_UTILS(float);
 #endif
 
-#endif  // NN_UTILS_H
+#endif  // ARR_H

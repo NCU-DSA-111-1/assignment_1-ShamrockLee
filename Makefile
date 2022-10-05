@@ -1,4 +1,5 @@
 CC := gcc
+VALGRIND := valgrind
 
 SRCDIR := src
 INCLUDEDIR := include
@@ -21,6 +22,7 @@ TESTS := $(shell find $(TESTDIR) -type f,l -name "test_*.$(SRCEXT)")
 TESTNAMES := $(patsubst $(TESTDIR)/test_%,%,$(TESTS:.$(SRCEXT)=))
 
 TESTNAMES_CHECKPREF := $(patsubst %,check-%,$(TESTNAMES))
+TESTNAMES_VALGRIND_CHECKPREF := $(patsubst %,check_valgrind-%,$(TESTNAMES))
 
 OBJECTS_SHARED := $(patsubst $(SRCDIR)/%,$(BUILDDIR)/%,$(SOURCES_SHARED:.$(SRCEXT)=.so))
 OBJECTS_MAIN := $(patsubst $(SRCDIR)/main/%,$(BUILDDIR)/%,$(SOURCES_MAIN:.$(SRCEXT)=.o))
@@ -28,7 +30,8 @@ OBJECTS_TEST := $(patsubst $(TESTDIR)/test_%,$(BUILDDIR)/test_%,$(TESTS:.$(SRCEX
 TARGETS_MAIN := $(OBJECTS_MAIN:.o=)
 TARGETS_TEST := $(patsubst $(TESTDIR)/test_%,$(TEST_BINDIR)/test_%,$(TESTS:.$(SRCEXT)=))
 
-DEBUG_OPTIMIZE_FLAGS := -g -O1 -DDEBUG=1
+DEBUG_LEVEL := 1
+DEBUG_OPTIMIZE_FLAGS := -g -O1 -DDEBUG_LEVEL=$(DEBUG_LEVEL)
 STADNDARD_FLAGS := -std=gnu11
 
 CFLAGS := $(STADNDARD_FLAGS) $(DEBUG_OPTIMIZE_FLAGS) -fPIC
@@ -77,5 +80,15 @@ $(TARGETS_TEST): $(TEST_BINDIR)/test_%: $(BUILDDIR)/test_%.o $(OBJECTS_SHARED)
 $(TESTNAMES_CHECKPREF): check-% : $(TEST_BINDIR)/test_%
 	$<
 
+.PHONY: $(TESTNAMES_VALGRIND_CHECKPREF)
+$(TESTNAMES_VALGRIND_CHECKPREF): check_valgrind-% : $(TEST_BINDIR)/test_%
+	$(VALGRIND) $<
+
+.PHONY: check-run
+check-run: $(TESTNAMES_CHECKPREF)
+
+.PHONY: check-valgrind
+check-valgrind: $(TESTNAMES_VALGRIND_CHECKPREF)
+
 .PHONY: check
-check: $(TESTNAMES_CHECKPREF)
+check: check-run check-valgrind

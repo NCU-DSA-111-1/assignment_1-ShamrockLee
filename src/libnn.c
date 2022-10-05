@@ -30,8 +30,8 @@ void init_param_weight(
   for (size_t i_dim = 0; i_dim < n_layer + 1; ++i_dim) {
     DEBUG_PRINTF(1, "PIDX(p_dims, %zu): %p, IDX(p_dims, %zu): %zu\n", i_dim, PIDX(p_dims, i_dim), i_dim, IDX(p_dims, i_dim));
   }
-  // ALLOC_TO(&pa_weights, n_layer);
-  pa_weights = (typeof(pa_weights))malloc(n_layer * sizeof(*pa_weights));
+  ALLOC_TO(pa_weights, n_layer);
+  // pa_weights = (typeof(pa_weights))malloc(n_layer * sizeof(*pa_weights));
   for (size_t i_layer = 0; i_layer < n_layer; ++i_layer) {
     ARR2D_TYPE(double)* pa_weight_current = PIDX(pa_weights, i_layer);
     pa_weight_current->dim1 = IDX(p_dims, i_layer);
@@ -57,9 +57,9 @@ void init_param_bias(
     const size_t n_layer,
     const size_t* p_dims,
     const bool zeroize) {
-  ALLOC_TO(&pp_biases, n_layer);
+  ALLOC_TO(pp_biases, n_layer);
   for (size_t i_layer = 0; i_layer < n_layer; ++i_layer) {
-    ALLOC_TO(PIDX(pp_biases, i_layer), IDX(p_dims, i_layer + 1));
+    ALLOC_TO(IDX(pp_biases, i_layer), IDX(p_dims, i_layer + 1));
     if (zeroize) {
       MEMSETN(IDX(pp_biases, i_layer), 0, IDX(p_dims, i_layer + 1));
     }
@@ -72,9 +72,9 @@ void init_param_bias_skiplast(
     const size_t n_layer,
     const size_t* p_dims,
     const bool zeroize) {
-  ALLOC_TO(&pp_biases, n_layer);
+  ALLOC_TO(pp_biases, n_layer);
   for (size_t i_layer = 0; i_layer < n_layer < 1; ++i_layer) {
-    ALLOC_TO(PIDX(pp_biases, i_layer), IDX(p_dims, i_layer + 1));
+    ALLOC_TO(IDX(pp_biases, i_layer), IDX(p_dims, i_layer + 1));
     if (zeroize) {
       MEMSETN(IDX(pp_biases, i_layer), 0, IDX(p_dims, i_layer + 1));
     }
@@ -106,7 +106,7 @@ void init_dims_from_weights(
     size_t* p_dims,
     const size_t n_layer,
     const ARR2D_TYPE(double) * pa_weights) {
-  ALLOC_TO(&p_dims, n_layer + 1);
+  ALLOC_TO(p_dims, n_layer + 1);
   *p_dims = pa_weights->dim1;
   for (size_t i_layer = 0; i_layer < n_layer - 1; ++i_layer) {
     if (DEBUG_LEVEL > 0)

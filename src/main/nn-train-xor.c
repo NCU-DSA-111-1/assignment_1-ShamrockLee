@@ -94,8 +94,8 @@ int main(int argc, char** argv) {
   unsigned int rand_seed = 0;
   
   struct optparse_long* longopts;
-  // CALLOC_TO(&longopts, 100);  // 100 is chosen for a sufficiently large space to store the argument definitions
-  longopts = calloc(100, sizeof(*longopts));
+  CALLOC_TO(longopts, 100);  // 100 is chosen for a sufficiently large space to store the argument definitions
+  // longopts = calloc(100, sizeof(*longopts));
   {
     size_t idx_argdef = 0;
     IDX(longopts, idx_argdef++) = (struct optparse_long){"help", 'h', OPTPARSE_NONE};
@@ -203,8 +203,8 @@ int main(int argc, char** argv) {
   }
   DEBUG_PRINTF(1, "str_type: %s\n", str_type);
   DEBUG_PRINTF(1, "n_hidden: %zu\n", n_hidden);
-  p_dims = (size_t *)calloc(1000, sizeof(size_t));
-  // ALLOC_TO(&p_dims, n_hidden + 2);
+  // p_dims = (size_t *)calloc(1000, sizeof(size_t));
+  ALLOC_TO(p_dims, n_hidden + 2);
   *p_dims = n_in;
   IDX(p_dims, n_hidden + 1) = n_output;
   if (strcmp(str_type, "custom") == 0) {
