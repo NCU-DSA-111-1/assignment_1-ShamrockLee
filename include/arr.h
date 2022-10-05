@@ -33,6 +33,13 @@
 #define ARR2D_FREE(p_arr) free((p_arr)->p_data)
 #define ARR2D_PIDX(p_arr, i0, i1) PIDX((p_arr)->p_data, i0 + i1 * (p_arr)->dim0)
 
+#define ARR2D_NELEM(p_arr) ((p_arr)->dim0 * (p_arr)->dim1)
+
+#define ARR2D_REPEAT(p_arr, X) \
+  for (size_t i_elem = 0; i_elem < ARR2D_NELEM(p_arr); ++i_elem) { \
+    IDX((p_arr)->p_data, i_elem) = (X); \
+  }
+
 /// Left product onto a column vector plus a bias: Av + b
 ///
 /// The shape of A is m * n, v n * 1, b n * 1, and Av 1 * m

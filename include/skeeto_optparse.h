@@ -82,6 +82,9 @@ struct optparse_long {
 OPTPARSE_API
 void optparse_init(struct optparse* options, char** argv);
 
+OPTPARSE_API
+void optparse_final(struct optparse* options);
+
 /**
  * Finalize the parser.
  */

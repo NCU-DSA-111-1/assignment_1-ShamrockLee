@@ -5,7 +5,6 @@
 #define DEBUG_LEVEL 0
 #endif
 
-#include <stdarg.h>
 #include <stdio.h>
 
 /**

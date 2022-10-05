@@ -6,12 +6,16 @@
 
 #include "arr.h"
 
-inline double logistic_shifted(const double x);
+double logistic_shifted(const double x);
+double diff_logistic_shifted(const double x);
+
+double square_error(const double x, const double y);
+double diff_square_error(const double x, const double y);
 
 void init_param_weight(
     ARR2D_TYPE(double) * pa_weights,
     const size_t n_layer,
-    const size_t* p_dims,
+    const size_t* const p_dims,
     const bool zeroize);
 
 void free_param_weight(
@@ -51,25 +55,29 @@ void forward(
 
 void backward(
     double (*const fn_diff_activation)(const double),
-    double (*const fn_diff_loss)(const double),
+    double (*const fn_diff_loss)(const double, const double),
     const size_t n_layer,
     const ARR2D_TYPE(double) * const pa_weights,
     const double* const p_inputs,
+    const double* const p_answers,
     const double* const* const pp_layers,
     const double* const* const pp_layers_activated,
     ARR2D_TYPE(double) * const pa_grad_weights,
     double* const* const pp_grad_biases);
 
-int train(
+int batch_train(
     double (*const fn_activation)(const double),
     double (*const fn_diff_activation)(const double),
-    double (*const fn_loss)(const double),
-    double (*const fn_diff_loss)(const double),
+    double (*const fn_loss)(const double, const double),
+    double (*const fn_diff_loss)(const double, const double),
     const size_t n_layer,
     const size_t n_data_train,
     const ARR2D_TYPE(double) * pa_inputs,
     const ARR2D_TYPE(double) * pa_answers,
     const double learning_rate,
+    const double max_loss,
+    const double max_delta_loss,
+    const size_t max_retrial,
     ARR2D_TYPE(double) * const pa_weights,
     double* const* const pp_biases);
 
