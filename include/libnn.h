@@ -6,7 +6,9 @@
 
 #include "arr.h"
 
+double logistic(const double x);
 double logistic_shifted(const double x);
+double diff_logistic(const double x);
 double diff_logistic_shifted(const double x);
 
 double square_error(const double x, const double y);

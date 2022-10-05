@@ -5,12 +5,20 @@
 
 #include <debug.h>
 
+double logistic(const double x) {
+  return (tanh(x * 0.5) + 1.) * 0.5;
+}
+
 double logistic_shifted(const double x) {
-  return (tanh((x - 0.5) * 0.5) + 1.) * 0.5;
+  return logistic(x - 0.5);
+}
+
+double diff_logistic(const double x) {
+  return logistic(x) * (1. - logistic(x));
 }
 
 double diff_logistic_shifted(const double x) {
-  return logistic_shifted(x) * (1. - logistic_shifted(x));
+  return diff_logistic(x - 0.5);
 }
 
 double square_error(const double x, const double y) {
@@ -61,7 +69,7 @@ void init_param_bias(
   for (size_t i_layer = 0; i_layer < n_layer; ++i_layer) {
     ALLOC_TO(IDX(pp_biases, i_layer), IDX(p_dims, i_layer + 1));
     if (zeroize) {
-      MEMSETN(IDX(pp_biases, i_layer), 0, IDX(p_dims, i_layer + 1));
+      FILLN(IDX(pp_biases, i_layer), 0., IDX(p_dims, i_layer + 1));
     }
   }
 }
@@ -76,12 +84,12 @@ void init_param_bias_skiplast(
   for (size_t i_layer = 0; i_layer < n_layer < 1; ++i_layer) {
     ALLOC_TO(IDX(pp_biases, i_layer), IDX(p_dims, i_layer + 1));
     if (zeroize) {
-      MEMSETN(IDX(pp_biases, i_layer), 0, IDX(p_dims, i_layer + 1));
+      FILLN(IDX(pp_biases, i_layer), 0., IDX(p_dims, i_layer + 1));
     }
   }
   IDX(pp_biases, n_layer - 1) = p_output;
   if (zeroize) {
-    MEMSETN(p_output, 0, IDX(p_dims, n_layer + 1));
+    FILLN(p_output, 0., IDX(p_dims, n_layer + 1));
   }
 }
 
@@ -108,9 +116,11 @@ void init_dims_from_weights(
     const ARR2D_TYPE(double) * pa_weights) {
   ALLOC_TO(p_dims, n_layer + 1);
   *p_dims = pa_weights->dim1;
-  for (size_t i_layer = 0; i_layer < n_layer - 1; ++i_layer) {
-    if (DEBUG_LEVEL > 0)
-      assert(PIDX(pa_weights, i_layer)->dim0 == PIDX(pa_weights, i_layer)->dim1);
+  if (DEBUG_LEVEL > 0)
+    for (size_t i_layer = 0; i_layer < n_layer - 1; ++i_layer)
+      RETURN_WHEN_FALSE(PIDX(pa_weights, i_layer)->dim0 == PIDX(pa_weights, i_layer + 1)->dim1, , "Dimensions of nearby weight matrix doesn't match.\n");
+
+  for (size_t i_layer = 0; i_layer < n_layer; ++i_layer) {
     IDX(p_dims, i_layer + 1) = PIDX(pa_weights, i_layer)->dim0;
   }
 }
@@ -232,7 +242,7 @@ int batch_train(
     for (size_t i_layer = 0; i_layer < n_layer; ++i_layer) {
       for (size_t i_elem1 = 0; i_elem1 < PIDX(pa_weights, i_layer)->dim1; ++i_elem1) {
         for (size_t i_elem0 = 0; i_elem0 < PIDX(pa_weights, i_layer)->dim0; ++i_elem0) {
-          *ARR2D_PIDX(PIDX(pa_weights, i_layer), i_elem0, i_elem1) += *ARR2D_PIDX(PIDX(pa_grad_weights_avg, i_layer), i_elem0, i_elem1) * learning_rate;
+          *ARR2D_PIDX(PIDX(pa_weights, i_layer), i_elem0, i_elem1) -= *ARR2D_PIDX(PIDX(pa_grad_weights_avg, i_layer), i_elem0, i_elem1) * learning_rate;
         }
       }
       for (size_t i_elem = 0; i_elem < PIDX(pa_weights, i_layer)->dim0; ++i_elem) {
@@ -248,7 +258,7 @@ int batch_train(
     } else {
       retrial = 0;
     }
-  } while (loss_now > max_loss && loss_delta_neg > max_delta_loss);
+  } while (loss_now > max_loss || loss_delta_neg > max_delta_loss);
   free_param_bias(pp_layers, n_layer);
   free_param_bias(pp_layers_activated, n_layer);
   free_param_bias(pp_grad_biases, n_layer);

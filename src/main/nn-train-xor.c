@@ -52,7 +52,6 @@ int batch_train_xor_to_file(
   }
   ARR2D_TYPE(double) * pa_weights;
   double** pp_biases;
-  srand(rand_seed);
   init_param_weight(pa_weights, n_layer, p_dims, 1);
   init_param_bias(pp_biases, n_layer, p_dims, 1);
   if (enable_rand_weight) {

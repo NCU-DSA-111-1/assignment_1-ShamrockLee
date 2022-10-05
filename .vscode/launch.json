@@ -1,0 +1,22 @@
+{
+  "configurations": [
+    {
+      "name": "Run and Debug C Main Program",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/build/${fileBasenameNoExtension}",
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "preLaunchTask": "make-c-main-executable"
+    },
+    {
+      "name": "Run and Debug C Test Program",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/build/test_bin/${fileBasenameNoExtension}",
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "preLaunchTask": "make-c-test-executable"
+    }
+  ]
+}

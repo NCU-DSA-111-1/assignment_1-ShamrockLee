@@ -5,4 +5,6 @@ make
 
 ### Status
 
-The main function is work in progress, and the library is `libnn.c`.
+The proof-of-concept main function is src/main/nnmicro-xor-demo.c. Build it with `make` and run with `./build/nnmicro-xor-demo`.
+
+It is still in progress upon submission. Hope to have a change to makeup (by e-mail).

@@ -1,0 +1,31 @@
+{
+  "tasks": [
+    {
+      "label": "make-c-main-executable",
+      "type": "process",
+      "command": "make",
+      "args": [
+        "DEBUG_LEVEL=2",
+        "build/${fileBasenameNoExtension}"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "build"
+    },
+    {
+      "label": "make-c-test-executable",
+      "type": "process",
+      "command": "make",
+      "args": [
+        "DEBUG_LEVEL=2",
+        "build/test_bin/${fileBasenameNoExtension}"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "build"
+    }
+  ],
+  "version": "2.0.0"
+}

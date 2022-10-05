@@ -8,10 +8,10 @@
  * The purpose is to increase readability and to reduce errors.
  **/
 
-#define PIDX(PX, I) ((PX) + sizeof(*(PX)) * (I))
+#define PIDX(PX, I) ((PX) + (I))
 #define IDX(PX, I) (*PIDX(PX, I))
 
-#define PSIDX(PX, I) ((PX) + (ptrdiff_t)sizeof(*(PX)) * (ptrdiff_t)(I))
+#define PSIDX(PX, I) ((PX) + (ptrdiff_t)(I))
 #define IDX(PX, I) (*PIDX(PX, I))
 
 #define ALLOC_TO(PX, N) (PX) = (typeof(PX))malloc(sizeof(*(PX)) * (N))
